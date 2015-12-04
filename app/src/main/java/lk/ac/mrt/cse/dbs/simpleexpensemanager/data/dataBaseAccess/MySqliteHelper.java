@@ -32,10 +32,11 @@ public class MySqliteHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_CREATE2 = "create table "
             + TABLE_TRANSACTION + "(" + COLUMN_DATE
-            + " date, " + COLUMN_ACCNO
+            + " text, " + COLUMN_ACCNO
             + " text primary key, "+ COLUMN_EXPETYPE + "text, "+ COLUMN_AMOUNT + "double);";
 
     public MySqliteHelper(Context context) {
+
         super(context,DATABASE_NAME, null, DATABASE_VERSION);
     }
 
