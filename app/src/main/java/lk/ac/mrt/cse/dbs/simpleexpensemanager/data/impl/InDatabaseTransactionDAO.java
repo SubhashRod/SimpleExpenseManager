@@ -1,20 +1,20 @@
 package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 
-import android.app.ListActivity;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.text.style.TtsSpan;
+import android.util.Log;
 
-import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.TransactionDAO;
-import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.dataBaseAccess.MySqliteHelper;
-import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.dataBaseAccess.DBHelper;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
 
@@ -23,53 +23,56 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
  */
 public class InDatabaseTransactionDAO implements TransactionDAO {
 
-    private String[] allColumns = { MySqliteHelper.COLUMN_DATE,
-            MySqliteHelper.COLUMN_ACCNO,MySqliteHelper.COLUMN_EXPETYPE,MySqliteHelper.COLUMN_AMOUNT };
+    private DBHelper dbHelper;
 
-    private SQLiteDatabase database;
-    private MySqliteHelper dbHelper;
-
-    public InDatabaseTransactionDAO(Context context){
-        dbHelper = new MySqliteHelper(context);
-        database = dbHelper.getWritableDatabase();
-    }
-
-    public void open() throws SQLException {
-        database = dbHelper.getWritableDatabase();
-    }
-
-    public void close() {
-        dbHelper.close();
+    public InDatabaseTransactionDAO(DBHelper dbHelper) {
+        this.dbHelper = dbHelper;
     }
 
     @Override
     public void logTransaction(Date date, String accountNo, ExpenseType expenseType, double amount) {
-        Transaction transaction = new Transaction(date, accountNo, expenseType, amount);
-        ContentValues values = new ContentValues();
-        values.put(MySqliteHelper.COLUMN_DATE, transaction.getDate().toString());
-        values.put(MySqliteHelper.COLUMN_ACCNO, transaction.getAccountNo());
-        values.put(MySqliteHelper.COLUMN_EXPETYPE, transaction.getExpenseType().toString());
-        values.put(MySqliteHelper.COLUMN_AMOUNT, transaction.getAmount());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        database.insert(MySqliteHelper.TABLE_TRANSACTION, null, values);
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.COLUMN_ACCNO, accountNo);
+        values.put(DBHelper.COLUMN_DATE, getDateTime(date));
+        values.put(DBHelper.COLUMN_EXPETYPE, expenseType.toString());
+        values.put(DBHelper.COLUMN_AMOUNT, amount);
+
+        db.insert(DBHelper.TABLE_TRANSACTION, null, values);
     }
 
     @Override
     public List<Transaction> getAllTransactionLogs() {
-        database = dbHelper.getReadableDatabase();
         List<Transaction> transactions = new ArrayList<Transaction>();
+        String selectQuery = "SELECT  * FROM " + DBHelper.TABLE_TRANSACTION;
 
-        Cursor cursor = database.query(MySqliteHelper.TABLE_TRANSACTION,
-                allColumns, null, null, null, null, null);
+        Log.e(DBHelper.LOG, selectQuery);
 
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            Transaction transaction = cursorToTransaction(cursor);
-            transactions.add(transaction);
-            cursor.moveToNext();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (c.moveToFirst()) {
+            do {
+                Transaction transaction = new Transaction();
+
+                Date date = null;
+                try {
+                    date = getDateTime(c.getString(c.getColumnIndex(DBHelper.COLUMN_DATE)));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                transaction.setAccountNo(c.getString((c.getColumnIndex(DBHelper.COLUMN_ACCNO))));
+                transaction.setDate(date);
+                transaction.setExpenseType(ExpenseType.valueOf(c.getString(c.getColumnIndex(DBHelper.COLUMN_EXPETYPE))));
+                transaction.setAmount(c.getDouble(c.getColumnIndex(DBHelper.COLUMN_AMOUNT)));
+
+                // adding to todo list
+                transactions.add(transaction);
+            } while (c.moveToNext());
         }
-        // make sure to close the cursor
-        cursor.close();
+
         return transactions;
     }
 
@@ -85,12 +88,18 @@ public class InDatabaseTransactionDAO implements TransactionDAO {
         return transactions.subList(size - limit, size);
     }
 
-    private Transaction cursorToTransaction(Cursor cursor) {
-        Transaction transaction = new Transaction();
-        //transaction.setDate(cursor.getString(0));
-        transaction.setAccountNo(cursor.getString(1));
-        transaction.setExpenseType(ExpenseType.valueOf(cursor.getString(2)));
-        transaction.setAmount(cursor.getDouble(3));
-        return transaction;
+    private String getDateTime(Date date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return dateFormat.format(date);
     }
+
+    private Date getDateTime(String date) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
+
+        Date date1 = format.parse(date);
+        return date1;
+
+    }
+
 }

@@ -30,9 +30,10 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.R;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.ExpenseManager;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.InMemoryDemoExpenseManager;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.PersistentExpenseManager;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.dataBaseAccess.DBHelper;
 
 public class MainActivity extends AppCompatActivity {
-    private static Context context;
+    private DBHelper dbHelper;
     private ExpenseManager expenseManager;
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -53,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        MainActivity.context = getApplicationContext();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -69,12 +69,9 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager);
 
         /***  Begin generating dummy data for In-Memory implementation  ***/
-        expenseManager = new PersistentExpenseManager(this);
+        dbHelper = new DBHelper(getApplicationContext());
+        expenseManager = new PersistentExpenseManager(dbHelper);
         /*** END ***/
-    }
-
-    public static Context getAppContext() {
-        return MainActivity.context;
     }
 
     /**
