@@ -53,19 +53,15 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-        // creating required tables
         db.execSQL(CREATE_TABLE_TRANSACTION);
         db.execSQL(CREATE_TABLE_ACCOUNT);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // on upgrade drop older tables
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ACCOUNT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTION);
 
-        // create new tables
         onCreate(db);
     }
 }
