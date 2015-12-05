@@ -43,7 +43,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Transaction table create statement
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION
-            + "(" + COLUMN_ACCNO + " TEXT PRIMARY KEY," + COLUMN_DATE + " DATETIME,"
+            + "(" + COLUMN_ACCNO + " TEXT," + COLUMN_DATE + " DATETIME,"
             + COLUMN_EXPETYPE + " TEXT," + COLUMN_AMOUNT + " DOUBLE" + ")";
 
 
@@ -63,5 +63,11 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTION);
 
         onCreate(db);
+    }
+
+    public void closeDB() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        if (db != null && db.isOpen())
+            db.close();
     }
 }

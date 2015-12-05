@@ -72,6 +72,19 @@ public class MainActivity extends AppCompatActivity {
         /*** END ***/
     }
 
+
+    @Override
+    protected void onPause() {
+        dbHelper.closeDB();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        dbHelper = new DBHelper(getApplicationContext());
+        super.onResume();
+    }
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.

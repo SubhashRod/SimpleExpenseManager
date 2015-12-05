@@ -38,16 +38,18 @@ public class InDatabaseTransactionDAO implements TransactionDAO {
         values.put(DBHelper.COLUMN_AMOUNT, amount);
 
         db.insert(DBHelper.TABLE_TRANSACTION, null, values);
+
+        db.close();
     }
 
     @Override
     public List<Transaction> getAllTransactionLogs() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
         List<Transaction> transactions = new ArrayList<Transaction>();
         String selectQuery = "SELECT  * FROM " + DBHelper.TABLE_TRANSACTION;
 
         Log.e(DBHelper.LOG, selectQuery);
 
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor c = db.rawQuery(selectQuery, null);
 
         if (c.moveToFirst()) {
@@ -70,6 +72,7 @@ public class InDatabaseTransactionDAO implements TransactionDAO {
             } while (c.moveToNext());
         }
 
+        db.close();
         return transactions;
     }
 
